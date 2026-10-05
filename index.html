@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FetchSNAP Dog Sport Photography Directory</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- FetchSNAP Header -->
+  <header class="app-header">
+    <div class="container header-container">
+      <div class="brand">
+        <h1>Fetch<span>SNAP</span> Photographer and Event Directory</h1>
+        <p class="tagline">Connecting exhibitors with photographers, one stride at a time.</p>
+      </div>
+      <button id="open-submit-btn" class="btn btn-primary">+ Submit Coverage</button>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <section class="search-section card">
+      <h2>Search Event Galleries</h2>
+      <div class="search-controls">
+        
+        <div class="form-group search-input-group">
+          <label for="search-text">Search Keywords</label>
+          <input 
+            type="text" 
+            id="search-text" 
+            placeholder="Search event name, photographer, or city..."
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="sport-filter">Dog Sport</label>
+          <select id="sport-filter">
+            <option value="all">All Sports</option>
+            <option value="FastCAT">FastCAT</option>
+            <option value="Agility">Agility</option>
+            <option value="Conformation">Conformation</option>
+            <option value="Scent Work">Scent Work</option>
+            <option value="Weight Pull">Weight Pull</option>
+            <option value="Dock Diving">Dock Diving</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status-filter">Gallery Status</label>
+          <select id="status-filter">
+            <option value="all">All Statuses</option>
+            <option value="Pre-Orders Open">Pre-Orders Open</option>
+            <option value="Gallery Live">Gallery Live</option>
+            <option value="Proofing">Proofing in Progress</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="state-filter">State / Region</label>
+          <select id="state-filter">
+            <option value="all">All States</option>
+            <option value="OH">Ohio (OH)</option>
+            <option value="PA">Pennsylvania (PA)</option>
+            <option value="NY">New York (NY)</option>
+            <option value="FL">Florida (FL)</option>
+            <option value="TX">Texas (TX)</option>
+            <option value="CA">California (CA)</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="search-meta">
+        <p id="results-count" class="results-count">Showing 0 events</p>
+        <button id="reset-filters-btn" class="btn btn-secondary btn-sm">Reset Filters</button>
+      </div>
+    </section>
+
+    <section class="results-section">
+      <div id="events-grid" class="events-grid">
+      </div>
+      
+      <div id="no-results" class="no-results hidden">
+        <h3>No Events Found</h3>
+        <p>Try adjusting your search terms or filters to find event coverage.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="event-modal" class="modal-overlay hidden">
+    <div class="modal-content card">
+      <button id="close-modal" class="modal-close-btn">&times;</button>
+      <div class="modal-header">
+        <span id="modal-status" class="badge"></span>
+        <span id="modal-sport" class="sport-tag"></span>
+      </div>
+      <h2 id="modal-title"></h2>
+      <div class="modal-body">
+        <p><strong>Photographer:</strong> <span id="modal-photographer"></span></p>
+        <p><strong>Date:</strong> <span id="modal-date"></span></p>
+        <p><strong>Location:</strong> <span id="modal-location"></span></p>
+        <div class="modal-description-box">
+          <p><strong>Event Details / Notes:</strong></p>
+          <p id="modal-description"></p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a id="modal-gallery-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Go to Official Gallery</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="submit-modal" class="modal-overlay hidden">
+    <div class="modal-content card modal-lg">
+      <button id="close-submit-modal" class="modal-close-btn">&times;</button>
+      <h2>Register Event Coverage</h2>
+      <p class="modal-subtitle">Submit details for an event you covered or are scheduled to cover.</p>
+      
+      <form id="submit-event-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="form-title">Event Title *</label>
+            <input type="text" id="form-title" required placeholder="e.g. Steel Valley Cluster FastCAT">
+          </div>
+
+          <div class="form-group">
+            <label for="form-photographer">Photographer / Business Name *</label>
+            <input type="text" id="form-photographer" required placeholder="e.g. Apex Media Solutions">
+          </div>
+
+          <div class="form-group">
+            <label for="form-sport">Dog Sport *</label>
+            <select id="form-sport" required>
+              <option value="FastCAT">FastCAT</option>
+              <option value="Agility">Agility</option>
+              <option value="Conformation">Conformation</option>
+              <option value="Scent Work">Scent Work</option>
+              <option value="Weight Pull">Weight Pull</option>
+              <option value="Dock Diving">Dock Diving</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="form-status">Gallery / Order Status *</label>
+            <select id="form-status" required>
+              <option value="Pre-Orders Open">Pre-Orders Open</option>
+              <option value="Gallery Live">Gallery Live</option>
+              <option value="Proofing">Proofing in Progress</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="form-date">Event Date *</label>
+            <input type="date" id="form-date" required>
+          </div>
+
+          <div class="form-group">
+            <label for="form-city">City *</label>
+            <input type="text" id="form-city" required placeholder="e.g. Medina">
+          </div>
+
+          <div class="form-group">
+            <label for="form-state">State *</label>
+            <select id="form-state" required>
+              <option value="OH">OH</option>
+              <option value="PA">PA</option>
+              <option value="NY">NY</option>
+              <option value="FL">FL</option>
+              <option value="TX">TX</option>
+              <option value="CA">CA</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="form-url">Gallery / Order Link URL *</label>
+            <input type="url" id="form-url" required placeholder="https://yourgallery.com">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+          <label for="form-desc">Event Notes / Description</label>
+          <textarea id="form-desc" rows="3" placeholder="Specify ring numbers, turnaround times, pre-order discounts, etc."></textarea>
+        </div>
+
+        <div class="modal-footer" style="margin-top: 1.5rem; text-align: right;">
+          <button type="submit" class="btn btn-primary">Submit Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
