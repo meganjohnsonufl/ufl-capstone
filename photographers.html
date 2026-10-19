@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FetchSNAP - Find your dog sport event galleries today</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="container header-container">
+      <div class="brand">
+        <h1><img src="/images/FetchSnap_Logo-wht.png" width="200px"></h1>
+        <p class="tagline">Making the Connection Between Photographers and Exhibitors</p>
+      </div>
+
+      <nav class="main-nav" aria-label="Main Navigation">
+        <a href="index.html" class="nav-link active" aria-current="page">Events and Map</a>
+        <a href="photographers.html" class="nav-link">Photographers Directory</a>
+        
+        <div class="auth-controls">
+          <button id="auth-btn" class="btn btn-outline" aria-label="Log in to account">Exhibitor Login</button>
+          <button id="view-saved-btn" class="btn btn-secondary hidden" aria-label="View saved events">
+            Saved (<span id="saved-count">0</span>)
+          </button>
+          <button id="open-submit-btn" class="btn btn-primary">Add Event Photo Coverage</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Verified Dog Sports Photographers</h2>
+      <p>Browse verified photographers offering photo coverage across all dog sport genres.</p>
+    </section>
+
+    <section class="photographer-grid">
+      
+      <article class="photographer-card card">
+        <div class="photographer-header">
+          <h3>Megan Johnson Photography LLC</h3>
+          <span class="badge badge-live">Verified Partner</span>
+        </div>
+        <p class="photographer-location"><strong>Primary Region:</strong> Ohio (OH), Pennsylvania (PA), Maryland (MD), and Virginia (VA)</p>
+        <p class="photographer-sports"><strong>Specialties:</strong> FastCAT, Coursing, Conformation, and Scent Work</p>
+        <p class="photographer-bio">Specializing in various genres with a love for portraiture.</p>
+        <div class="photographer-actions">
+          <a href="https://meganjohnsonphotographyllc.pixieset.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary" aria-label="Visit Megan Johnson Photography Pixieset Gallery">
+            Visit Pixieset Gallery &rarr;
+          </a>
+        </div>
+      </article>
+
+      <article class="photographer-card card">
+        <div class="photographer-header">
+          <h3>Charlotte With Dogs</h3>
+          <span class="badge badge-live">Verified Partner</span>
+        </div>
+        <p class="photographer-location"><strong>Primary Region:</strong> Pennsylvania (PA) & New York (NY)</p>
+        <p class="photographer-sports"><strong>Specialties:</strong> Agility, Dock Diving, Scent Work</p>
+        <p class="photographer-bio">Former attorney with a love for her three dogs and capturing the fun of others at events..</p>
+        <div class="photographer-actions">
+          <a href="https://charlottewithdogs.pixieset.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary" aria-label="Visit Apex Canine Sports Media Portfolio Platform">
+            Visit Portfolio &rarr;
+          </a>
+        </div>
+      </article>
+
+    </section>
+  </main>
+
+</body>
+</html>

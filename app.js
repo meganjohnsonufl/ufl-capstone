@@ -1,3 +1,10 @@
+/* ==========================================================================
+   APPLICATION LOGIC - Dog Sport Media Directory
+   Features: Real-Time Multi-Filter Engine, Interactive Map (Leaflet.js),
+             LocalStorage User Auth/Saved Events, and Flodesk Alert API Hook.
+   ========================================================================== */
+
+// Initial Dataset with GPS Coordinates for Map Plotting
 const initialEvents = [
     {
       id: 1,
@@ -7,94 +14,140 @@ const initialEvents = [
       date: "2026-08-01",
       city: "Columbus",
       state: "OH",
+      lat: 39.9612,
+      lng: -82.9988,
       status: "Gallery Live",
-      galleryUrl: "https://example.com/galleries/svc",
-      description: "Full action coverage of all days and runs. High-speed action shots available."
+      galleryUrl: "https://meganjohnsonphotographyllc.pixieset.com",
+      description: "Full photo coverage of all runs plus video."
     },
     {
       id: 2,
-      title: "Loyalhanna Agility Club",
+      title: "Skyline Agility Trial",
       sport: "Agility",
-      photographer: "Apex Visuals",
-      date: "2026-09-19",
-      city: "Latrobe",
+      photographer: "The Spotted Tongue Photography",
+      date: "2026-09-03",
+      city: "Pittsburgh",
       state: "PA",
+      lat: 40.4406,
+      lng: -79.9959,
       status: "Proofing",
-      galleryUrl: "https://example.com/galleries/lac",
-      description: "Coverage for Rings 1 & 2 across Friday through Sunday runs."
+      galleryUrl: "https://www.thespottedtongue.com/",
+      description: "Coverage for Ring 1 on Saturday and Ring 2 on Sunday with podium photos."
     },
     {
       id: 3,
-      title: "Tri-State Beagle AKC Scent Work Trials",
+      title: "Oneonta Kennel Club",
       sport: "Scent Work",
-      photographer: "Paws to Pose",
-      date: "2026-09-28",
-      city: "New York",
+      photographer: "Charlotte With Dogs",
+      date: "2026-10-24",
+      city: "Buffalo",
       state: "NY",
+      lat: 42.8864,
+      lng: -78.8784,
       status: "Pre-Orders Open",
-      galleryUrl: "https://example.com/galleries/tri-state-scent",
-      description: "Pre-orders open for this event and will close 48 hours prior to the event start."
+      galleryUrl: "https://charlottewithdogs.pixieset.com/",
+      description: "Pre-orders open for for the upcoming scent work trials with Oneonta."
     },
     {
       id: 4,
-      title: "W3PO Summits 2026",
-      sport: "Weight Pull",
-      photographer: "Megan Johnson Photography LLC",
-      date: "2026-06-01",
-      city: "Toledo",
-      state: "OH",
-      status: "Gallery Live",
-      galleryUrl: "https://example.com/galleries/w3po-summits",
-      description: "Complete coverage of all weight classes and podium awards."
-    },
-    {
-      id: 5,
-      title: "Butler County Kennel Club Autumn Classic",
+      title: "Catahoula Leopard Dog Specialty",
       sport: "Conformation",
-      photographer: "Ring Legend Photos",
-      date: "2026-09-20",
-      city: "Butler",
-      state: "PA",
+      photographer: "Megan Johnson Photography LLC",
+      date: "2026-06-21",
+      city: "Cleveland",
+      state: "OH",
+      lat: 41.4993,
+      lng: -81.6944,
       status: "Gallery Live",
-      galleryUrl: "https://example.com/galleries/bckc-barkfest",
-      description: "Ringside candids and all requests were honored."
-    }
+      galleryUrl: "https://meganjohnsonphotographyllc.pixieset.com",
+      description: "Complete ringside candid and win photo coverage."
+    },
   ];
   
+  // App State Management
   let eventsState = [...initialEvents];
+  let currentUser = JSON.parse(localStorage.getItem('dsm_user')) || null;
+  let savedEventIds = JSON.parse(localStorage.getItem('dsm_saved_events')) || [];
+  let showSavedOnly = false;
+  let map = null;
+  let mapMarkers = [];
   
   // DOM Element References
   const eventsGrid = document.getElementById('events-grid');
   const noResultsView = document.getElementById('no-results');
   const resultsCountEl = document.getElementById('results-count');
+  const savedCountEl = document.getElementById('saved-count');
+  const toggleViewBtn = document.getElementById('toggle-view-btn');
   
-  // Filter Input Elements
+  // Filter Input References
   const searchTextInput = document.getElementById('search-text');
   const sportFilterSelect = document.getElementById('sport-filter');
   const statusFilterSelect = document.getElementById('status-filter');
   const stateFilterSelect = document.getElementById('state-filter');
   const resetFiltersBtn = document.getElementById('reset-filters-btn');
   
-  // Modal Elements
-  const eventModal = document.getElementById('event-modal');
-  const closeEventModalBtn = document.getElementById('close-modal');
-  const modalTitle = document.getElementById('modal-title');
-  const modalSport = document.getElementById('modal-sport');
-  const modalStatus = document.getElementById('modal-status');
-  const modalPhotographer = document.getElementById('modal-photographer');
-  const modalDate = document.getElementById('modal-date');
-  const modalLocation = document.getElementById('modal-location');
-  const modalDescription = document.getElementById('modal-description');
-  const modalGalleryLink = document.getElementById('modal-gallery-link');
+  // Auth & Modal References
+  const authBtn = document.getElementById('auth-btn');
+  const viewSavedBtn = document.getElementById('view-saved-btn');
+  const authModal = document.getElementById('auth-modal');
+  const closeAuthModalBtn = document.getElementById('close-auth-modal');
+  const loginForm = document.getElementById('login-form');
   
-  // Submission Modal Elements
+  const eventModal = document.getElementById('event-modal');
+  const closeModalBtn = document.getElementById('close-modal');
+  const alertSignupBtn = document.getElementById('alert-signup-btn');
+  
+  const flodeskModal = document.getElementById('flodesk-modal');
+  const closeFlodeskModalBtn = document.getElementById('close-flodesk-modal');
+  const flodeskSubscribeForm = document.getElementById('flodesk-subscribe-form');
+  const subscribeStatus = document.getElementById('subscribe-status');
+  
   const submitModal = document.getElementById('submit-modal');
   const openSubmitBtn = document.getElementById('open-submit-btn');
   const closeSubmitModalBtn = document.getElementById('close-submit-modal');
   const submitForm = document.getElementById('submit-event-form');
   
   /* ==========================================================================
-     Filtering & Rendering Logic
+     Leaflet.js Geographic Map Initialization & Marker Updates
+     ========================================================================== */
+  
+  function initMap() {
+    const mapElement = document.getElementById('events-map');
+    if (!mapElement) return;
+  
+    // Initialize Leaflet map centered over Midwest/Eastern US
+    map = L.map('events-map').setView([40.0, -82.0], 5);
+  
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+  
+    updateMapMarkers(eventsState);
+  }
+  
+  function updateMapMarkers(eventsToMap) {
+    if (!map) return;
+  
+    // Clear existing markers
+    mapMarkers.forEach(marker => map.removeLayer(marker));
+    mapMarkers = [];
+  
+    eventsToMap.forEach(evt => {
+      if (evt.lat && evt.lng) {
+        const marker = L.marker([evt.lat, evt.lng]).addTo(map);
+        marker.bindPopup(`
+          <strong>${evt.title}</strong><br>
+          <em>${evt.sport} (${evt.city}, ${evt.state})</em><br>
+          <button onclick="openDetailModal(${evt.id})" class="btn btn-sm btn-primary" style="margin-top:0.5rem;">View Gallery Info</button>
+        `);
+        mapMarkers.push(marker);
+      }
+    });
+  }
+  
+  /* ==========================================================================
+     Real-Time Multi-Filter Search & Dynamic Grid Rendering
      ========================================================================== */
   
   function renderEvents(events) {
@@ -113,6 +166,8 @@ const initialEvents = [
       const card = document.createElement('article');
       card.className = 'event-card';
   
+      const isSaved = savedEventIds.includes(evt.id);
+  
       let statusClass = 'badge-live';
       if (evt.status === 'Pre-Orders Open') statusClass = 'badge-preorder';
       if (evt.status === 'Proofing') statusClass = 'badge-proofing';
@@ -126,25 +181,31 @@ const initialEvents = [
         <p class="card-meta"><strong>Photographer:</strong> ${evt.photographer}</p>
         <p class="card-meta"><strong>Location:</strong> ${evt.city}, ${evt.state}</p>
         <p class="card-meta"><strong>Date:</strong> ${evt.date}</p>
+        
         <div class="card-actions">
           <button class="btn btn-secondary btn-sm view-details-btn" data-id="${evt.id}">View Details</button>
-          <a href="${evt.galleryUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">View Gallery</a>
+          <button class="btn btn-secondary btn-sm save-event-btn" data-id="${evt.id}" aria-label="Save this event">
+            ${isSaved ? '★ Saved' : '☆ Save'}
+          </button>
+          <a href="${evt.galleryUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" aria-label="Open gallery for ${evt.title}">
+            Visit Gallery &rarr;
+          </a>
         </div>
       `;
   
       eventsGrid.appendChild(card);
     });
   
-    // Attach event listeners to View Details buttons
+    // Attach card action listeners
     document.querySelectorAll('.view-details-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const eventId = parseInt(e.target.getAttribute('data-id'), 10);
-        openDetailModal(eventId);
-      });
+      btn.addEventListener('click', (e) => openDetailModal(parseInt(e.target.dataset.id, 10)));
+    });
+  
+    document.querySelectorAll('.save-event-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => toggleSaveEvent(parseInt(e.target.dataset.id, 10)));
     });
   }
   
-  // Real-time filtering calc
   function applyFilters() {
     const query = searchTextInput.value.toLowerCase().trim();
     const selectedSport = sportFilterSelect.value;
@@ -152,7 +213,6 @@ const initialEvents = [
     const selectedState = stateFilterSelect.value;
   
     const filtered = eventsState.filter(evt => {
-      // Keyword match on Title, Photographer, or City
       const matchesKeyword = 
         evt.title.toLowerCase().includes(query) ||
         evt.photographer.toLowerCase().includes(query) ||
@@ -161,11 +221,13 @@ const initialEvents = [
       const matchesSport = selectedSport === 'all' || evt.sport === selectedSport;
       const matchesStatus = selectedStatus === 'all' || evt.status === selectedStatus;
       const matchesState = selectedState === 'all' || evt.state === selectedState;
+      const matchesSaved = !showSavedOnly || savedEventIds.includes(evt.id);
   
-      return matchesKeyword && matchesSport && matchesStatus && matchesState;
+      return matchesKeyword && matchesSport && matchesStatus && matchesState && matchesSaved;
     });
   
     renderEvents(filtered);
+    updateMapMarkers(filtered);
   }
   
   function resetFilters() {
@@ -173,88 +235,160 @@ const initialEvents = [
     sportFilterSelect.value = 'all';
     statusFilterSelect.value = 'all';
     stateFilterSelect.value = 'all';
+    showSavedOnly = false;
+    toggleViewBtn.textContent = 'Filter: All Events';
     applyFilters();
   }
   
   /* ==========================================================================
-     Modal Controls
+     User Auth & LocalStorage Saved Events Logic
+     ========================================================================== */
+  
+  function updateAuthUI() {
+    if (currentUser) {
+      authBtn.textContent = `Logged in: ${currentUser.email.split('@')[0]}`;
+      viewSavedBtn.classList.remove('hidden');
+    } else {
+      authBtn.textContent = 'Exhibitor Login';
+      viewSavedBtn.classList.add('hidden');
+    }
+    savedCountEl.textContent = savedEventIds.length;
+  }
+  
+  function toggleSaveEvent(eventId) {
+    if (!currentUser) {
+      authModal.classList.remove('hidden');
+      return;
+    }
+  
+    if (savedEventIds.includes(eventId)) {
+      savedEventIds = savedEventIds.filter(id => id !== eventId);
+    } else {
+      savedEventIds.push(eventId);
+    }
+  
+    localStorage.setItem('dsm_saved_events', JSON.stringify(savedEventIds));
+    updateAuthUI();
+    applyFilters();
+  }
+  
+  /* ==========================================================================
+     Flodesk API Integration Simulation
+     ========================================================================== */
+  
+  function handleFlodeskSubscribe(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('subscriber-name').value;
+    const email = document.getElementById('subscriber-email').value;
+    const eventId = document.getElementById('alert-event-id').value;
+  
+    subscribeStatus.classList.remove('hidden', 'success');
+    subscribeStatus.textContent = "Connecting to Flodesk API...";
+  
+    // Simulated Flodesk API Webhook / Endpoint Request
+    setTimeout(() => {
+      subscribeStatus.classList.add('success');
+      subscribeStatus.textContent = `Success! ${name} (${email}) subscribed for gallery release alerts.`;
+      
+      setTimeout(() => {
+        flodeskModal.classList.add('hidden');
+        flodeskSubscribeForm.reset();
+        subscribeStatus.classList.add('hidden');
+      }, 2000);
+    }, 1000);
+  }
+  
+  /* ==========================================================================
+     Modals & Form Setup
      ========================================================================== */
   
   function openDetailModal(id) {
     const evt = eventsState.find(e => e.id === id);
     if (!evt) return;
   
-    modalTitle.textContent = evt.title;
-    modalSport.textContent = evt.sport;
-    modalStatus.textContent = evt.status;
-    modalPhotographer.textContent = evt.photographer;
-    modalDate.textContent = evt.date;
-    modalLocation.textContent = `${evt.city}, ${evt.state}`;
-    modalDescription.textContent = evt.description || 'No additional details provided.';
-    modalGalleryLink.href = evt.galleryUrl;
-  
+    document.getElementById('modal-title').textContent = evt.title;
+    document.getElementById('modal-sport').textContent = evt.sport;
+    document.getElementById('modal-status').textContent = evt.status;
+    document.getElementById('modal-photographer').textContent = evt.photographer;
+    document.getElementById('modal-date').textContent = evt.date;
+    document.getElementById('modal-location').textContent = `${evt.city}, ${evt.state}`;
+    document.getElementById('modal-description').textContent = evt.description || 'No notes.';
+    
+    const galleryLink = document.getElementById('modal-gallery-link');
+    galleryLink.href = evt.galleryUrl;
+    
+    document.getElementById('alert-event-id').value = evt.id;
     eventModal.classList.remove('hidden');
   }
   
-  function closeDetailModal() {
-    eventModal.classList.add('hidden');
-  }
-  
-  function openSubmitModalHandler() {
-    submitModal.classList.remove('hidden');
-  }
-  
-  function closeSubmitModalHandler() {
-    submitModal.classList.add('hidden');
-    submitForm.reset();
-  }
-  
-  /* ==========================================================================
-     Event Registration and Form Submission
-     ========================================================================== */
-  
-  function handleFormSubmit(e) {
-    e.preventDefault();
-  
-    const newEvent = {
-      id: Date.now(),
-      title: document.getElementById('form-title').value.trim(),
-      sport: document.getElementById('form-sport').value,
-      photographer: document.getElementById('form-photographer').value.trim(),
-      date: document.getElementById('form-date').value,
-      city: document.getElementById('form-city').value.trim(),
-      state: document.getElementById('form-state').value,
-      status: document.getElementById('form-status').value,
-      galleryUrl: document.getElementById('form-url').value.trim(),
-      description: document.getElementById('form-desc').value.trim()
-    };
-  
-    eventsState.unshift(newEvent);
-  
-    resetFilters();
-    closeSubmitModalHandler();
-  }
-  
-  /* ==========================================================================
-     Event Listeners Setup
-     ========================================================================== */
-  
-  searchTextInput.addEventListener('keyup', applyFilters);
-  sportFilterSelect.addEventListener('change', applyFilters);
-  statusFilterSelect.addEventListener('change', applyFilters);
-  stateFilterSelect.addEventListener('change', applyFilters);
-  resetFiltersBtn.addEventListener('click', resetFilters);
-  
-  closeEventModalBtn.addEventListener('click', closeDetailModal);
-  openSubmitBtn.addEventListener('click', openSubmitModalHandler);
-  closeSubmitModalBtn.addEventListener('click', closeSubmitModalHandler);
-  submitForm.addEventListener('submit', handleFormSubmit);
-  
-  window.addEventListener('click', (e) => {
-    if (e.target === eventModal) closeDetailModal();
-    if (e.target === submitModal) closeSubmitModalHandler();
-  });
-  
+  // Event Listeners Initialization
   document.addEventListener('DOMContentLoaded', () => {
-    renderEvents(eventsState);
+    initMap();
+    updateAuthUI();
+    applyFilters();
+  
+    // Search Engine Inputs
+    searchTextInput.addEventListener('keyup', applyFilters);
+    sportFilterSelect.addEventListener('change', applyFilters);
+    statusFilterSelect.addEventListener('change', applyFilters);
+    stateFilterSelect.addEventListener('change', applyFilters);
+    resetFiltersBtn.addEventListener('click', resetFilters);
+  
+    toggleViewBtn.addEventListener('click', () => {
+      showSavedOnly = !showSavedOnly;
+      toggleViewBtn.textContent = showSavedOnly ? 'Filter: Saved Events Only' : 'Filter: All Events';
+      applyFilters();
+    });
+  
+    // Auth & Submissions
+    authBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
+    closeAuthModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+  
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      currentUser = {
+        email: document.getElementById('login-email').value,
+        role: document.getElementById('login-role').value
+      };
+      localStorage.setItem('dsm_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      authModal.classList.add('hidden');
+    });
+  
+    closeModalBtn.addEventListener('click', () => eventModal.classList.add('hidden'));
+  
+    alertSignupBtn.addEventListener('click', () => {
+      eventModal.classList.add('hidden');
+      flodeskModal.classList.remove('hidden');
+    });
+  
+    closeFlodeskModalBtn.addEventListener('click', () => flodeskModal.classList.add('hidden'));
+    flodeskSubscribeForm.addEventListener('submit', handleFlodeskSubscribe);
+  
+    openSubmitBtn.addEventListener('click', () => submitModal.classList.remove('hidden'));
+    closeSubmitModalBtn.addEventListener('click', () => submitModal.classList.add('hidden'));
+  
+    submitForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newEvent = {
+        id: Date.now(),
+        title: document.getElementById('form-title').value.trim(),
+        sport: document.getElementById('form-sport').value,
+        photographer: document.getElementById('form-photographer').value.trim(),
+        date: document.getElementById('form-date').value,
+        city: document.getElementById('form-city').value.trim(),
+        state: document.getElementById('form-state').value,
+        lat: parseFloat(document.getElementById('form-lat').value) || 40.0,
+        lng: parseFloat(document.getElementById('form-lng').value) || -82.0,
+        status: document.getElementById('form-status').value,
+        galleryUrl: document.getElementById('form-url').value.trim(),
+        description: document.getElementById('form-desc').value.trim()
+      };
+  
+      eventsState.unshift(newEvent);
+      applyFilters();
+      submitModal.classList.add('hidden');
+      submitForm.reset();
+    });
   });

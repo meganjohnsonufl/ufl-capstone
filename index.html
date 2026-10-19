@@ -3,41 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FetchSNAP Dog Sport Photography Directory</title>
+  <title>FetchSNAP - Find your dog sport event galleries today</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Leaflet CSS for Interactive Geographic Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 <body>
 
-  <!-- FetchSNAP Header -->
   <header class="app-header">
     <div class="container header-container">
       <div class="brand">
-        <h1>Fetch<span>SNAP</span> Photographer and Event Directory</h1>
-        <p class="tagline">Connecting exhibitors with photographers, one stride at a time.</p>
+        <h1><img src="/images/FetchSnap_Logo-wht.png" width="200px"></h1>
+        <p class="tagline">Making the Connection Between Photographers and Exhibitors</p>
       </div>
-      <button id="open-submit-btn" class="btn btn-primary">+ Submit Coverage</button>
+
+      <nav class="main-nav" aria-label="Main Navigation">
+        <a href="index.html" class="nav-link active" aria-current="page">Events and Map</a>
+        <a href="photographers.html" class="nav-link">Photographers Directory</a>
+        
+        <div class="auth-controls">
+          <button id="auth-btn" class="btn btn-outline" aria-label="Log in to account">Exhibitor Login</button>
+          <button id="view-saved-btn" class="btn btn-secondary hidden" aria-label="View saved events">
+            Saved (<span id="saved-count">0</span>)
+          </button>
+          <button id="open-submit-btn" class="btn btn-primary">Add Event Photo Coverage</button>
+        </div>
+      </nav>
     </div>
   </header>
 
+  <!-- Main Content Container -->
   <main class="container">
     
-    <section class="search-section card">
-      <h2>Search Event Galleries</h2>
+    <!-- Real-Time Multi-Filter Search Engine Section -->
+    <section class="search-section card" aria-labelledby="search-heading">
+      <h2 id="search-heading">Search and Filter Event Coverage</h2>
       <div class="search-controls">
         
+        <!-- Text Search -->
         <div class="form-group search-input-group">
           <label for="search-text">Search Keywords</label>
           <input 
             type="text" 
             id="search-text" 
-            placeholder="Search event name, photographer, or city..."
+            placeholder="Search event title, photographer, or city..."
             autocomplete="off"
+            aria-label="Search events by keyword"
           >
         </div>
 
+        <!-- Sport Filter -->
         <div class="form-group">
           <label for="sport-filter">Dog Sport</label>
-          <select id="sport-filter">
+          <select id="sport-filter" aria-label="Filter by Dog Sport">
             <option value="all">All Sports</option>
             <option value="FastCAT">FastCAT</option>
             <option value="Agility">Agility</option>
@@ -48,9 +66,10 @@
           </select>
         </div>
 
+        <!-- Gallery Status Filter -->
         <div class="form-group">
           <label for="status-filter">Gallery Status</label>
-          <select id="status-filter">
+          <select id="status-filter" aria-label="Filter by Gallery Status">
             <option value="all">All Statuses</option>
             <option value="Pre-Orders Open">Pre-Orders Open</option>
             <option value="Gallery Live">Gallery Live</option>
@@ -58,42 +77,61 @@
           </select>
         </div>
 
+        <!-- State / Region Filter -->
         <div class="form-group">
           <label for="state-filter">State / Region</label>
-          <select id="state-filter">
+          <select id="state-filter" aria-label="Filter by State or Region">
             <option value="all">All States</option>
             <option value="OH">Ohio (OH)</option>
             <option value="PA">Pennsylvania (PA)</option>
             <option value="NY">New York (NY)</option>
-            <option value="FL">Florida (FL)</option>
-            <option value="TX">Texas (TX)</option>
-            <option value="CA">California (CA)</option>
+            <option value="CA">California</option>
           </select>
         </div>
 
       </div>
 
+      <!-- Live Search Meta Bar -->
       <div class="search-meta">
-        <p id="results-count" class="results-count">Showing 0 events</p>
-        <button id="reset-filters-btn" class="btn btn-secondary btn-sm">Reset Filters</button>
+        <p id="results-count" class="results-count" aria-live="polite">Showing 0 events</p>
+        <div class="meta-buttons">
+          <button id="toggle-view-btn" class="btn btn-secondary btn-sm" aria-label="Toggle between grid and saved view">
+            Filter: All Events
+          </button>
+          <button id="reset-filters-btn" class="btn btn-secondary btn-sm">Reset Filters</button>
+        </div>
       </div>
     </section>
 
-    <section class="results-section">
+    <!-- Interactive Geographic Map Section -->
+    <section class="map-section card" aria-labelledby="map-heading">
+      <div class="map-header">
+        <h2 id="map-heading">Interactive Event Map</h2>
+        <p class="map-subtext">Locate photographer coverage near you. Markers filter in real time with search criteria.</p>
+      </div>
+      <div id="events-map" class="map-container" aria-label="Interactive map showing event locations"></div>
+    </section>
+
+    <!-- Results Grid Section -->
+    <section class="results-section" aria-labelledby="results-heading">
+      <h2 id="results-heading" class="sr-only">Event Listings</h2>
       <div id="events-grid" class="events-grid">
+        <!-- Cards dynamically injected via app.js -->
       </div>
       
-      <div id="no-results" class="no-results hidden">
-        <h3>No Events Found</h3>
-        <p>Try adjusting your search terms or filters to find event coverage.</p>
+      <!-- Empty State View -->
+      <div id="no-results" class="no-results card hidden">
+        <h3>No Matching Events Found</h3>
+        <p>Try adjusting your search filters or clearing keyword parameters.</p>
       </div>
     </section>
 
   </main>
 
-  <div id="event-modal" class="modal-overlay hidden">
+  <!-- Event Detail Modal -->
+  <div id="event-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content card">
-      <button id="close-modal" class="modal-close-btn">&times;</button>
+      <button id="close-modal" class="modal-close-btn" aria-label="Close details popup">&times;</button>
       <div class="modal-header">
         <span id="modal-status" class="badge"></span>
         <span id="modal-sport" class="sport-tag"></span>
@@ -104,32 +142,87 @@
         <p><strong>Date:</strong> <span id="modal-date"></span></p>
         <p><strong>Location:</strong> <span id="modal-location"></span></p>
         <div class="modal-description-box">
-          <p><strong>Event Details / Notes:</strong></p>
+          <p><strong>Event Notes:</strong></p>
           <p id="modal-description"></p>
         </div>
       </div>
       <div class="modal-footer">
-        <a id="modal-gallery-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Go to Official Gallery</a>
+        <button id="alert-signup-btn" class="btn btn-secondary">Get Gallery Release Alerts</button>
+        <a id="modal-gallery-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" aria-label="Open official gallery platform in new tab">
+          View Official Gallery &rarr;
+        </a>
       </div>
     </div>
   </div>
 
-  <div id="submit-modal" class="modal-overlay hidden">
+  <!-- Flodesk Gallery Release Notification Modal -->
+  <div id="flodesk-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="flodesk-heading">
+    <div class="modal-content card">
+      <button id="close-flodesk-modal" class="modal-close-btn" aria-label="Close subscription form">&times;</button>
+      <h2 id="flodesk-heading">Subscribe for Gallery Alerts</h2>
+      <p class="modal-subtitle">Get instantly notified via email when proofs and final galleries go live.</p>
+      
+      <form id="flodesk-subscribe-form" class="subscribe-form">
+        <input type="hidden" id="alert-event-id" value="">
+        <div class="form-group">
+          <label for="subscriber-name">Full Name</label>
+          <input type="text" id="subscriber-name" required placeholder="Jim Shorts">
+        </div>
+        <div class="form-group">
+          <label for="subscriber-email">Email Address</label>
+          <input type="email" id="subscriber-email" required placeholder="iluvdogsports@gmail.com">
+        </div>
+        <div class="form-group">
+          <label for="subscriber-dog">Dog's Registered Name / Call Name (Optional)</label>
+          <input type="text" id="subscriber-dog" placeholder="e.g. Clifford">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Subscribe via Flodesk</button>
+        <p id="subscribe-status" class="status-msg hidden" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Login / Profile Modal -->
+  <div id="auth-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="auth-heading">
+    <div class="modal-content card">
+      <button id="close-auth-modal" class="modal-close-btn" aria-label="Close login popup">&times;</button>
+      <h2 id="auth-heading">Exhibitor and Photographer Sign In</h2>
+      <p class="modal-subtitle">Sign in to save events for later and manage registered coverage listings.</p>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" required placeholder="photographer@domain.com">
+        </div>
+        <div class="form-group">
+          <label for="login-role">Account Type</label>
+          <select id="login-role">
+            <option value="exhibitor">Exhibitor/Competitor</option>
+            <option value="photographer">Event Photographer</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Submit Event Coverage Modal -->
+  <div id="submit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="submit-heading">
     <div class="modal-content card modal-lg">
-      <button id="close-submit-modal" class="modal-close-btn">&times;</button>
-      <h2>Register Event Coverage</h2>
-      <p class="modal-subtitle">Submit details for an event you covered or are scheduled to cover.</p>
+      <button id="close-submit-modal" class="modal-close-btn" aria-label="Close submit event popup">&times;</button>
+      <h2 id="submit-heading">Register Event Coverage</h2>
+      <p class="modal-subtitle">Photographers: Register an upcoming and/or past event to list the official gallery.</p>
       
       <form id="submit-event-form">
         <div class="form-grid">
           <div class="form-group">
             <label for="form-title">Event Title *</label>
-            <input type="text" id="form-title" required placeholder="e.g. Steel Valley Cluster FastCAT">
+            <input type="text" id="form-title" required placeholder="e.g. Steel Valley Cluster">
           </div>
 
           <div class="form-group">
-            <label for="form-photographer">Photographer / Business Name *</label>
-            <input type="text" id="form-photographer" required placeholder="e.g. Apex Media Solutions">
+            <label for="form-photographer">Photographer/Business Name *</label>
+            <input type="text" id="form-photographer" required placeholder="e.g. Megan Johnson Photography LLC">
           </div>
 
           <div class="form-group">
@@ -145,7 +238,7 @@
           </div>
 
           <div class="form-group">
-            <label for="form-status">Gallery / Order Status *</label>
+            <label for="form-status">Gallery Status *</label>
             <select id="form-status" required>
               <option value="Pre-Orders Open">Pre-Orders Open</option>
               <option value="Gallery Live">Gallery Live</option>
@@ -160,7 +253,7 @@
 
           <div class="form-group">
             <label for="form-city">City *</label>
-            <input type="text" id="form-city" required placeholder="e.g. Medina">
+            <input type="text" id="form-city" required placeholder="e.g. Cleveland">
           </div>
 
           <div class="form-group">
@@ -169,30 +262,41 @@
               <option value="OH">OH</option>
               <option value="PA">PA</option>
               <option value="NY">NY</option>
-              <option value="FL">FL</option>
-              <option value="TX">TX</option>
-              <option value="CA">CA</option>
+              <option value="FL">CA</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="form-url">Gallery / Order Link URL *</label>
-            <input type="url" id="form-url" required placeholder="https://yourgallery.com">
+            <label for="form-lat">Latitude (for Map Plotting)</label>
+            <input type="number" step="any" id="form-lat" placeholder="e.g. 39.9612">
+          </div>
+
+          <div class="form-group">
+            <label for="form-lng">Longitude (for Map Plotting)</label>
+            <input type="number" step="any" id="form-lng" placeholder="e.g. -82.9988">
+          </div>
+
+          <div class="form-group">
+            <label for="form-url">Gallery / Portfolio Platform Link *</label>
+            <input type="url" id="form-url" required placeholder="https://meganjohnsonphotographyllc.pixieset.com">
           </div>
         </div>
 
         <div class="form-group" style="margin-top: 1rem;">
-          <label for="form-desc">Event Notes / Description</label>
-          <textarea id="form-desc" rows="3" placeholder="Specify ring numbers, turnaround times, pre-order discounts, etc."></textarea>
+          <label for="form-desc">Event Details / Turnaround Notes</label>
+          <textarea id="form-desc" rows="3" placeholder="Provide details on photo pre-orders, high-speed action shots, or proofing timelines."></textarea>
         </div>
 
         <div class="modal-footer" style="margin-top: 1.5rem; text-align: right;">
-          <button type="submit" class="btn btn-primary">Submit Event</button>
+          <button type="submit" class="btn btn-primary">Publish Listing</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Leaflet Map JS Dependency -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Main Application Logic -->
   <script src="app.js"></script>
 </body>
 </html>
